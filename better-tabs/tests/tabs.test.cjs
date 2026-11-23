@@ -956,3 +956,19 @@ test("nothing is renamed before the installed settings are read", () => {
   assert.deepEqual(tick(), []);
   assert.equal(h.data["better-tabs.names"], undefined);
 });
+
+test("a tab the agent menu named follows the agent once it starts, even if a shell was seen first", () => {
+  const pane = { pane: "p1", tab: "t1", terminal: "x1", title: "sam@desk:~/work/lantern", cwd: "/work/lantern", program: SHELL };
+  const { tick } = naming([named("t1", 1, "OpenCode")], [pane]);
+  assert.deepEqual(tick(), []);
+  Object.assign(pane, { title: "OC | Fix the login form", program: AGENT("OpenCode") });
+  assert.deepEqual(tick(), [{ id: "t1", name: "OC | Fix the login form" }]);
+});
+
+test("a name the person typed stays when an agent starts in the tab", () => {
+  const pane = { pane: "p1", tab: "t1", terminal: "x1", title: "sam@desk:~/work/lantern", cwd: "/work/lantern", program: SHELL };
+  const { tick } = naming([named("t1", 1, "login")], [pane]);
+  assert.deepEqual(tick(), []);
+  Object.assign(pane, { title: "OC | Fix the login form", program: AGENT("OpenCode") });
+  assert.deepEqual(tick(), []);
+});

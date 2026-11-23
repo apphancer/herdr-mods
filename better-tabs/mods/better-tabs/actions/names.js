@@ -86,14 +86,16 @@ function paneName(pane, homePath) {
 function tabWants(tabPanes, homePath) {
   let best = null;
   const known = new Set();
+  const programs = new Set();
   for (const pane of tabPanes) {
     const named = paneName(pane, homePath);
     if (!named) continue;
     const names = [named.name, titleText(pane.title, pane), cleanName(pane.program.name)];
     for (const name of [...names, folderName(pane.cwd, homePath)]) if (name) known.add(name);
+    if (!pane.program.shell && cleanName(pane.program.name)) programs.add(cleanName(pane.program.name));
     if (named.name && named.rank > (best?.rank ?? 0)) best = named;
   }
-  return { name: best?.name ?? null, known };
+  return { name: best?.name ?? null, known, programs };
 }
 
 // What to ask Herdr for now. records: tab ID → { auto: the name this mod set } or
@@ -132,6 +134,7 @@ export function planNames(allSpaces, allPanes, records, now, homePath = homeFold
     else if (!record) {
       if (wants.known.size) record = wants.known.has(current) ? { auto: current } : { manual: true };
     } else if (record.auto !== undefined && current !== record.auto) record = { manual: true };
+    if (record?.manual && wants.programs.has(current)) record = { auto: current };
     if (record?.manual) {
       next[tab.id] = record;
       continue;
